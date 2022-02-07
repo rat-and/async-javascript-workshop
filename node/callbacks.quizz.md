@@ -6,7 +6,11 @@ Make it run without errors but you cannot change the location of the `let` state
 
 ```js
 function doAsyncTask(cb) {
-  cb();
+//  cb();
+  setImmediate(() => {
+    console.log("Async Task Calling Callback");
+    cb();
+  });
 }
 doAsyncTask(_ => console.log(message));
 
@@ -22,7 +26,11 @@ const fs = require("fs");
 
 function readFileThenDo(next) {
   fs.readFile("./blah.nofile", (err, data) => {
-    next(data);
+    if (err) {
+      next(err);
+    } else {
+      next(data);
+    }
   });
 }
 
@@ -44,8 +52,13 @@ function readFileThenDo(next) {
     next(data);
   });
 }
-// Hint use try..catch
-readFileThenDo(data => {
-  console.log(data);
-});
+// Hint use try..catch - hehe, callbacks cannot be catched by try..catch :(
+try {
+  readFileThenDo(data => {
+    console.log(data);
+  });
+}
+catch (error) {
+  console.log("Error occured");
+}
 ```
