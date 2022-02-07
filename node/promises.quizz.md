@@ -6,23 +6,23 @@ Create a promise version of the async readFile function
 const fs = require("fs");
 
 function readFile(filename, encoding) {
-  return new Promise( (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     fs.readFile(filename, encoding, (err, data) => {
       if (err) {
-        reject("Error occured")
+        reject("Error occured");
       } else {
-        resolve(data)
+        resolve(data);
       }
     });
-  })
+  });
 }
 readFile("./files/demofile.txt", "utf-8")
-    .then( (value) => {
-      console.log(value)
-    })
-    .catch( error => {
-      console.error(error)
-    })
+  .then((value) => {
+    console.log(value);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 ```
 
 # Question 2
@@ -34,8 +34,14 @@ const fs = require("fs");
 const zlib = require("zlib");
 
 function zlibPromise(data) {
-  zlib.gzip(data, (error, result) => {
-    //TODO
+  return new Promise((resolve, reject) => {
+    zlib.gzip(data, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
+    });
   });
 }
 
@@ -49,8 +55,12 @@ function readFile(filename, encoding) {
 }
 
 readFile("./files/demofile.txt", "utf-8")
-    .then(...) // --> Load it then zip it and then print it to screen
-});
+  .then((data) =>
+    zlibPromise(data)
+      .then((zippedData) => console.log(zippedData))
+      .catch((err) => console.error(err))
+  )
+  .catch((err) => console.error(err));
 ```
 
 # Question 3
