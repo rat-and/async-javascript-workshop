@@ -54,12 +54,21 @@ function readFile(filename, encoding) {
   });
 }
 
+// Quiz #2
+// readFile("./files/demofile.txt", "utf-8")
+//   .then((data) =>
+//     zlibPromise(data)
+//       .then((zippedData) => console.log(zippedData))
+//       .catch((err) => console.error(err))
+//   )
+//   .catch((err) => console.error(err));
+
+// Quiz #3 & #4
 readFile("./files/demofile.txt", "utf-8")
-  .then((data) =>
-    zlibPromise(data)
-      .then((zippedData) => console.log(zippedData))
-      .catch((err) => console.error(err))
-  )
+  .then((data) => {
+    return zlibPromise(data);
+  })
+  .then((data) => console.log(data))
   .catch((err) => console.error(err));
 ```
 
@@ -77,10 +86,15 @@ Create some code that tries to read from disk a file and times out if it takes l
 
 ```js
 function readFileFake(sleep) {
-  return new Promise((resolve) => setTimeout(resolve, sleep));
+  return new Promise((resolve, _) => setTimeout(resolve, sleep, "read"));
+}
+function timeout(sleep) {
+  return new Promise((_, reject) => setTimeout(reject, sleep, "timeout"));
 }
 
-readFileFake(5000); // This resolves a promise after 5 seconds, pretend it's a large file being read from disk
+Promise.race([readFileFake(5000), timeout(3000)])
+  .then((data) => console.log(data))
+  .catch((err) => console.error(err));
 ```
 
 # Question 6
@@ -90,20 +104,29 @@ Create a process flow which publishes a file from a server, then realises the us
 ```js
 function authenticate() {
   console.log("Authenticating");
-  return new Promise(resolve => setTimeout(resolve, 2000, { status: 200 }));
+  return new Promise((resolve) => setTimeout(resolve, 2000, { status: 200, msg: "Published" }));
 }
 
 function publish() {
   console.log("Publishing");
-  return new Promise(resolve => setTimeout(resolve, 2000, { status: 403 }));
+  return new Promise((resolve) => setTimeout(resolve, 2000, { status: 403, msg: "Unauthorized" }));
 }
 
 function timeout(sleep) {
   return new Promise((resolve, reject) => setTimeout(reject, sleep, "timeout"));
 }
 
-Promise.race( [publish(), timeout(3000)])
-  .then(...)
-  .then(...)
-  .catch(...);
+const savePublish = () => {
+  return publish().then((result) => {
+    if (result.status == 403) {
+      return authenticate();
+    } else {
+      return Promise.resolve("Published");
+    }
+  });
+};
+
+Promise.race([savePublish(), timeout(3000)])
+  .then((data) => console.log(data.msg))
+  .catch((err) => console.error(err));
 ```

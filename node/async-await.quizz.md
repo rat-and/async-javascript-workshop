@@ -9,11 +9,16 @@ const readFile = util.promisify(fs.readFile);
 
 const files = ["./files/demofile.txt", "./files/demofile.other.txt"];
 
-let promises = files.map(name => readFile(name, { encoding: "utf8" }));
-Promise.all(promises).then(values => {
-  // <-- Uses .all
-  console.log(values);
-});
+(async () => {
+  try {
+    let promises = files.map((name) => readFile(name, { encoding: "utf8" }));
+    // Promise.all(promises).then((data) => console.log(data));
+    let values = await Promise.all(promises);
+    console.log(values);
+  } catch (err) {
+    console.error(err);
+  }
+})();
 ```
 
 # Question 2
@@ -23,19 +28,33 @@ Again convert the promise version of the multi-file loader over to using async/a
 node --harmony-async-iteration <file.js>
 
 ```js
-const fileIterator = files => ({
+const util = require("util");
+const fs = require("fs");
+const readFile = util.promisify(fs.readFile);
+
+const fileIterator = (files) => ({
   [Symbol.asyncIterator]: () => ({
     x: 0,
     next() {
-      // TODO
-    }
-  })
+      if (this.x >= files.length) {
+        return Promise.resolve({
+          done: true,
+          value: this.x,
+        });
+      }
+
+      return readFile(files[this.x++], { encoding: "utf8" }).then((data) => ({
+        done: false,
+        value: data,
+      }));
+    },
+  }),
 });
 
 (async () => {
   for await (let x of fileIterator([
     "./files/demofile.txt",
-    "./files/demofile.other.txt"
+    "./files/demofile.other.txt",
   ])) {
     console.log(x);
   }
